@@ -1,19 +1,19 @@
 #include <gtkmm/application.h>
 #include <gtkmm/applicationwindow.h>
+#include <gtkmm/button.h>
 
-#include "BuilderWidget.h"
+#include "TemplateWidget.h"
 
-//using DemoWindow = BuilderWidget<
-//        "/campolattaro/jackson/widgets/demo.ui",
-//        Gtk::ApplicationWindow
-//>;
+class DemoWindow : public TemplateWidget<DemoWindow>, public Gtk::ApplicationWindow {
 
-class DemoWindow : public TemplateWidget, public Gtk::ApplicationWindow {
+    Gtk::Button &_button;
+
 public:
 
     DemoWindow() : Glib::ObjectBase("DemoWindow"),
                    TemplateWidget("/campolattaro/jackson/widgets/demo.ui"),
-                   Gtk::ApplicationWindow() {}
+                   Gtk::ApplicationWindow(),
+                   _button(get_widget<Gtk::Button>("first_button")) {}
 
 };
 
@@ -49,7 +49,6 @@ private:
 };
 
 int main() {
-
     auto app = DemoApplication::create();
     return app->run();
 }
