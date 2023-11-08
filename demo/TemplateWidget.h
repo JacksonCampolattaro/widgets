@@ -14,7 +14,6 @@
 #include <gtkmm/builder.h>
 #include <gtkmm/widget.h>
 
-template<typename Implementation>
 class TemplateWidget : public Glib::ExtraClassInit {
 public:
 
@@ -29,18 +28,12 @@ public:
     template<class W>
     W &get_widget(const Glib::ustring &name) {
 
-        auto self = reinterpret_cast<Implementation *>(this);
-        auto type = Implementation::get_base_type();
-        //        std::cout << g_type_name(type) << std::endl;
-        //        std::cout << name << std::endl;
-
-        //        auto quark_children = g_quark_from_static_string("gtk-widget-auto-children");
-        //        std::cout << quark_children << std::endl;
-        //        auto children = (GHashTable *) g_object_get_qdata(G_OBJECT(self->gobj()), quark_children);
-        //        assert(children);
+        auto self = reinterpret_cast<Gtk::Widget *>(this);
+        auto type = G_OBJECT_TYPE(self->gobj());
 
         auto c_widget = gtk_widget_get_template_child(GTK_WIDGET(self->gobj()), type, name.c_str());
         assert(c_widget);
+
         auto widget = dynamic_cast<W *>(Glib::wrap(GTK_WIDGET(c_widget), false));
         assert(widget);
         return *widget;
@@ -58,13 +51,24 @@ private:
                 self->_resource.c_str()
         );
 
-        //        gtk_widget_class_bind_template_child_private();
-        //        gtk_widget_class_bind_template_child(klass, GtkWidget, first_button)
+
+        // todo: this is only an example
+        gtk_widget_class_bind_template_child_full(klass, "first-button", false, 0);
+        gtk_widget_class_bind_template_child_full(klass, "second-button", false, 0);
     }
 
     static void instance_init_function(GTypeInstance *instance, void *class_data) {
         g_return_if_fail(GTK_IS_WIDGET(instance));
         gtk_widget_init_template(GTK_WIDGET(instance));
+
+        auto klass = GTK_WIDGET_CLASS(g_type_class_ref(G_OBJECT_TYPE(instance)));
+
+        auto c_widget = gtk_widget_get_template_child(
+                GTK_WIDGET(instance),
+                G_OBJECT_TYPE(instance),
+                "first-button"
+        );
+        assert(c_widget);
     }
 
     Glib::ustring _resource;

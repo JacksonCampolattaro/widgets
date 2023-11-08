@@ -50,3 +50,4 @@ string(REPLACE ";" "\n\t\t" GRESOURCE_FILES "${GRESOURCE_FILES}")
 configure_file(${GRESOURCE_XML_IN} ${GRESOURCE_XML} @ONLY)
 
 add_subdirectory(demo)
+#add_subdirectory(demo-c)

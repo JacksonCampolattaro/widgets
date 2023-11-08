@@ -4,7 +4,7 @@
 
 #include "TemplateWidget.h"
 
-class DemoWindow : public TemplateWidget<DemoWindow>, public Gtk::ApplicationWindow {
+class DemoWindow : public TemplateWidget, public Gtk::ApplicationWindow {
 
     Gtk::Button &_button;
 
@@ -13,7 +13,9 @@ public:
     DemoWindow() : Glib::ObjectBase("DemoWindow"),
                    TemplateWidget("/campolattaro/jackson/widgets/demo.ui"),
                    Gtk::ApplicationWindow(),
-                   _button(get_widget<Gtk::Button>("first_button")) {}
+                   _button(get_widget<Gtk::Button>("first-button")) {
+        _button.set_label("I can overwrite button properties!");
+    }
 
 };
 
