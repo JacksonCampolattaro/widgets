@@ -1,77 +1,105 @@
 #ifndef WIDGETS_TEMPLATEWIDGET_H
 #define WIDGETS_TEMPLATEWIDGET_H
 
-#include <algorithm>
-#include <iostream>
-#include <cassert>
-
-#include <gtk/gtk.h>
-
-#include <glibmm/extraclassinit.h>
-#include <giomm/charsetconverter.h>
-
-#include <gtkmm/builderscope.h>
 #include <gtkmm/builder.h>
-#include <gtkmm/widget.h>
 
-class TemplateWidget : public Glib::ExtraClassInit {
+#include <cassert>
+#include <iostream>
+
+// todo: this doesn't work
+extern "C" void _gtk_builder_parser_parse_buffer(
+        GtkBuilder *builder,
+        const char *filename,
+        const char *buffer,
+        gssize length,
+        const char **requested_objs,
+        GError **error
+);
+
+template<typename BaseWidget>
+class TemplateWidget : public BaseWidget {
 public:
 
     explicit TemplateWidget(const Glib::ustring &resource) :
-            Glib::ExtraClassInit(
-                    class_init_function,
-                    reinterpret_cast<void *>(this),
-                    instance_init_function
-            ),
-            _resource(resource) {}
+            BaseWidget{}, // todo: should this be the user's responsibility?
+            _builder(Gtk::Builder::create()) {
 
-    template<class W>
-    W &get_widget(const Glib::ustring &name) {
+        // Load the resource file
+        GError *error = nullptr;
+        auto bytes = g_resources_lookup_data(resource.c_str(), G_RESOURCE_LOOKUP_FLAGS_NONE, &error);
+        if (!bytes) {
+            g_warning (
+                    "Failed to load resources from path id %s: %s",
+                    resource.c_str(),
+                    error->message
+            );
+            g_error_free(error);
+            return;
+        }
 
-        auto self = reinterpret_cast<Gtk::Widget *>(this);
-        auto type = G_OBJECT_TYPE(self->gobj());
+        // Construct the widgets in the file using the builder
+        bool success = gtk_builder_extend_with_template(
+                GTK_BUILDER(_builder->gobj()),
+                G_OBJECT(this->gobj()),
+                G_TYPE_FROM_INSTANCE(this->gobj()),
+                (const char *) g_bytes_get_data(bytes, 0),
+                g_bytes_get_size(bytes),
+                &error
+        );
+        if (!success) {
+            g_warning (
+                    "Failed to construct composite widget from template: %s",
+                    error->message
+            );
+            g_error_free(error);
+            return;
+        }
 
-        auto c_widget = gtk_widget_get_template_child(GTK_WIDGET(self->gobj()), type, name.c_str());
-        assert(c_widget);
+        // todo: if I can invoke the parsing method by hand instead, I can fix the prefix issue!
 
-        auto widget = dynamic_cast<W *>(Glib::wrap(GTK_WIDGET(c_widget), false));
+        //        auto name = g_type_name(G_TYPE_FROM_INSTANCE(this->gobj()));
+        //        gtk_builder_expose_object(GTK_BUILDER(_builder->gobj()), name, G_OBJECT(this->gobj()));
+        //        auto filename = g_strconcat("<", name, " template>", NULL);
+        //        _gtk_builder_parser_parse_buffer(
+        //                GTK_BUILDER(_builder->gobj()),
+        //                filename,
+        //                (const char *) g_bytes_get_data(bytes, 0),
+        //                g_bytes_get_size(bytes),
+        //                nullptr,
+        //                &error
+        //        );
+        //        g_free(filename);
+
+    }
+
+    template<class W, typename... Args>
+    W &get_widget(const Glib::ustring &name, Args &&... args) {
+
+        // Determine if the widget is a user-created type, based on its constructor
+        constexpr bool isDerived = requires(
+                typename W::BaseObjectType *baseObject,
+                const Glib::RefPtr<Gtk::Builder> &b,
+                Args &&... a
+        ) {
+            W(baseObject, b, std::forward<Args>(a)...);
+        };
+
+        // Invoke the appropriate builder function, depending on whether the widget is a built-in
+        W *widget;
+        if constexpr (isDerived)
+            widget = Gtk::Builder::get_widget_derived<W>(_builder, name, std::forward<Args>(args)...);
+        else
+            widget = _builder->get_widget<W>(name);
+
+        // todo: in the future, it might be better to throw an error
         assert(widget);
         return *widget;
-    }
+    };
 
 private:
 
-    static void class_init_function(void *g_class, void *class_data) {
-        g_return_if_fail(GTK_IS_WIDGET_CLASS(g_class));
+    Glib::RefPtr<Gtk::Builder> _builder;
 
-        const auto klass = static_cast<GtkWidgetClass *>(g_class);
-        const auto self = static_cast<TemplateWidget *>(class_data);
-        gtk_widget_class_set_template_from_resource(
-                klass,
-                self->_resource.c_str()
-        );
-
-
-        // todo: this is only an example
-        gtk_widget_class_bind_template_child_full(klass, "first-button", false, 0);
-        gtk_widget_class_bind_template_child_full(klass, "second-button", false, 0);
-    }
-
-    static void instance_init_function(GTypeInstance *instance, void *class_data) {
-        g_return_if_fail(GTK_IS_WIDGET(instance));
-        gtk_widget_init_template(GTK_WIDGET(instance));
-
-        auto klass = GTK_WIDGET_CLASS(g_type_class_ref(G_OBJECT_TYPE(instance)));
-
-        auto c_widget = gtk_widget_get_template_child(
-                GTK_WIDGET(instance),
-                G_OBJECT_TYPE(instance),
-                "first-button"
-        );
-        assert(c_widget);
-    }
-
-    Glib::ustring _resource;
 };
 
 #endif //WIDGETS_TEMPLATEWIDGET_H
