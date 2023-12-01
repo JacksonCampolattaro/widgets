@@ -1,34 +1,58 @@
 using Gtk 4.0;
+using Adw 1;
 
 template $gtkmm__CustomObject_DemoWindow : Gtk.ApplicationWindow {
   default-width: 600;
   default-height: 300;
 
-  Box {
+  Adw.PreferencesGroup {
+        margin-top: 16;
+        margin-bottom: 16;
+        margin-start: 16;
+        margin-end: 16;
 
-      orientation: vertical;
-      vexpand: true;
-      spacing: 16;
-      margin-top: 16;
-      margin-bottom: 16;
-      margin-start: 16;
-      margin-end: 16;
+      title: "Title";
+      description: "Description";
 
-      Label {
-        label: "Example label";
-        vexpand: true;
-        margin-top: 10;
+      Adw.ActionRow {
+        title: "This is a button";
+        title-lines: 2;
+
+        Button first-button {
+            label: "I'm a button!";
+            vexpand: false;
+            valign: center;
+        }
       }
 
-      Button first-button {
-        label: "Example button";
-        vexpand: true;
+      Adw.ActionRow {
+        title: "Vector view:";
+
+        $gtkmm__CustomObject_VectorView vector-view {
+            halign: end;
+        }
       }
 
-      Button second-button {
-        label: "Another example button";
-        vexpand: true;
+      Adw.ActionRow {
+        title: "Vector entry:";
+
+        $gtkmm__CustomObject_VectorEntry vector-entry {
+            halign: end;
+            vexpand: false;
+            valign: center;
+        }
+      }
+
+      Adw.ActionRow {
+        title: "Compact vector entry:";
+
+        $gtkmm__CustomObject_CompactVectorEntry compact-vector-entry {
+            halign: end;
+            vexpand: false;
+            valign: center;
+        }
       }
 
   }
+
 }

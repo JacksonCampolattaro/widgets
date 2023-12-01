@@ -1,0 +1,40 @@
+using Gtk 4.0;
+
+template $gtkmm__CustomObject_VectorView : Gtk.Box {
+  orientation: horizontal;
+  hexpand: false;
+  spacing: 2;
+  styles ["numeric"]
+
+  Label {
+    label: "⟨";
+    styles ["dim-label"]
+  }
+
+  $gtkmm__CustomObject_FloatView x-view {
+    label: _("XXX.xx");
+  }
+
+  Label {
+    label: ", ";
+    styles ["dim-label"]
+  }
+
+  $gtkmm__CustomObject_FloatView y-view {
+    label: _("YYY.yy");
+  }
+
+  Label {
+    label: ", ";
+    styles ["dim-label"]
+  }
+
+  $gtkmm__CustomObject_FloatView z-view {
+    label: _("ZZZ.zz");
+  }
+
+  Label {
+    label: "⟩";
+    styles ["dim-label"]
+  }
+}

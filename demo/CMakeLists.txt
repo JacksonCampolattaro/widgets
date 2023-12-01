@@ -13,13 +13,17 @@ add_custom_command(
         DEPENDS blueprint-compilation ${GRESOURCE_XML} ${UI_FILE_PATHS}
         VERBATIM
 )
-#add_dependencies(gresources blueprint-compilation)
 
 add_executable(
         demo
         main.cpp
         ${GRESOURCE_C}
         TemplateWidget.h
+        VectorView.h
+        FloatView.h
+        FloatEntry.h
+        VectorEntry.h
+        CompactVectorEntry.h
 )
 target_link_libraries(
         demo PUBLIC
@@ -27,4 +31,4 @@ target_link_libraries(
         PkgConfig::gtkmm
         PkgConfig::adwaita
 )
-#add_dependencies(demo gresources)
+add_dependencies(demo blueprint-compilation)

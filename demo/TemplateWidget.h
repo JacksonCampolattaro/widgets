@@ -7,22 +7,65 @@
 #include <iostream>
 
 // todo: this doesn't work
-extern "C" void _gtk_builder_parser_parse_buffer(
-        GtkBuilder *builder,
-        const char *filename,
-        const char *buffer,
-        gssize length,
-        const char **requested_objs,
-        GError **error
-);
+//extern "C" void _gtk_builder_parser_parse_buffer(
+//        GtkBuilder *builder,
+//        const char *filename,
+//        const char *buffer,
+//        gssize length,
+//        const char **requested_objs,
+//        GError **error
+//);
 
 template<typename BaseWidget>
 class TemplateWidget : public BaseWidget {
 public:
 
     explicit TemplateWidget(const Glib::ustring &resource) :
-            BaseWidget{}, // todo: should this be the user's responsibility?
+            BaseWidget(),
             _builder(Gtk::Builder::create()) {
+        setup(resource);
+    }
+
+    explicit TemplateWidget(BaseWidget::BaseObjectType *cobject,
+                            const Glib::RefPtr<Gtk::Builder> &builder,
+                            const Glib::ustring &resource) :
+            BaseWidget(cobject),
+            // todo: should I use the same builder here? It seems to cause problems.
+            _builder(Gtk::Builder::create()) {
+        setup(resource);
+    }
+
+    template<class W, typename... Args>
+    W &get_widget(const Glib::ustring &name, Args &&... args) {
+
+        // Determine if the widget is a user-created type, based on its constructor
+        constexpr bool isDerived = requires(
+                typename W::BaseObjectType *baseObject,
+                const Glib::RefPtr<Gtk::Builder> &b,
+                Args &&... a
+        ) {
+            W(baseObject, b, std::forward<Args>(a)...);
+        };
+
+        // Invoke the appropriate builder function, depending on whether the widget is a built-in
+        W *widget;
+        if constexpr (isDerived)
+            widget = Gtk::Builder::get_widget_derived<W>(_builder, name, std::forward<Args>(args)...);
+        else
+            widget = _builder->get_widget<W>(name);
+
+        // todo: in the future, it might be better to throw an error
+        assert(widget);
+        return *widget;
+    };
+
+private:
+
+    Glib::RefPtr<Gtk::Builder> _builder;
+
+    void setup(const Glib::ustring &resource) {
+        assert(_builder);
+        //std::cout << G_OBJECT_TYPE_NAME(this->gobj()) << std::endl;
 
         // Load the resource file
         GError *error = nullptr;
@@ -69,36 +112,7 @@ public:
         //                &error
         //        );
         //        g_free(filename);
-
     }
-
-    template<class W, typename... Args>
-    W &get_widget(const Glib::ustring &name, Args &&... args) {
-
-        // Determine if the widget is a user-created type, based on its constructor
-        constexpr bool isDerived = requires(
-                typename W::BaseObjectType *baseObject,
-                const Glib::RefPtr<Gtk::Builder> &b,
-                Args &&... a
-        ) {
-            W(baseObject, b, std::forward<Args>(a)...);
-        };
-
-        // Invoke the appropriate builder function, depending on whether the widget is a built-in
-        W *widget;
-        if constexpr (isDerived)
-            widget = Gtk::Builder::get_widget_derived<W>(_builder, name, std::forward<Args>(args)...);
-        else
-            widget = _builder->get_widget<W>(name);
-
-        // todo: in the future, it might be better to throw an error
-        assert(widget);
-        return *widget;
-    };
-
-private:
-
-    Glib::RefPtr<Gtk::Builder> _builder;
 
 };
 

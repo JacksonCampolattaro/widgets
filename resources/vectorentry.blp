@@ -1,0 +1,59 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $gtkmm__CustomObject_VectorEntry : Gtk.Box {
+
+    orientation: vertical;
+    spacing: 4;
+    margin-top: 4;
+    margin-bottom: 4;
+    vexpand: false;
+    valign: center;
+
+    Box {
+        orientation: horizontal;
+        styles ["linked"]
+
+        Button {
+            Label {
+                label: "𝑥";
+                styles ["title-2", "error"]
+            }
+            can-focus: false;
+            focusable: false;
+        }
+        $gtkmm__CustomObject_FloatEntry x-entry {}
+    }
+
+
+    Box {
+        orientation: horizontal;
+        styles ["linked"]
+
+        Button {
+            Label {
+                label: "𝑦";
+                styles ["title-2", "success"]
+            }
+            can-focus: false;
+            focusable: false;
+        }
+        $gtkmm__CustomObject_FloatEntry y-entry {}
+    }
+
+    Box {
+        orientation: horizontal;
+        styles ["linked"]
+
+        Button {
+            Label {
+                label: "𝑧";
+                styles ["title-2", "accent"]
+            }
+            can-focus: false;
+            focusable: false;
+        }
+        $gtkmm__CustomObject_FloatEntry z-entry {}
+    }
+
+}

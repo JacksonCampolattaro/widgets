@@ -1,20 +1,26 @@
 #include <gtkmm/application.h>
 #include <gtkmm/applicationwindow.h>
-#include <gtkmm/button.h>
+
+#include <adwaita.h>
 
 #include "TemplateWidget.h"
+#include "VectorView.h"
+#include "VectorEntry.h"
+#include "CompactVectorEntry.h"
 
 class DemoWindow : public TemplateWidget<Gtk::ApplicationWindow> {
 
-    Gtk::Button &_button;
+    VectorView &_vectorView;
+    VectorEntry &_vectorEntry;
+    CompactVectorEntry &_compactVectorEntry;
 
 public:
 
     DemoWindow() : Glib::ObjectBase("DemoWindow"),
                    TemplateWidget("/campolattaro/jackson/widgets/demo.ui"),
-                   _button(get_widget<Gtk::Button>("first-button")) {
-        _button.set_label("I can overwrite button properties!");
-    }
+                   _vectorView(get_widget<VectorView>("vector-view")),
+                   _vectorEntry(get_widget<VectorEntry>("vector-entry")),
+                   _compactVectorEntry(get_widget<CompactVectorEntry>("compact-vector-entry")) {}
 
 };
 
@@ -34,6 +40,15 @@ protected:
 
     // Override default signal handlers:
     void on_activate() override {
+
+        static_cast<void>(FloatView());
+        static_cast<void>(FloatEntry());
+        static_cast<void>(VectorView());
+        static_cast<void>(VectorEntry());
+        static_cast<void>(CompactVectorEntry());
+
+        adw_style_manager_set_color_scheme(adw_style_manager_get_default(), ADW_COLOR_SCHEME_DEFAULT);
+
         auto window = Gtk::make_managed<DemoWindow>();
         add_window(*window);
         window->present();
